@@ -1,4 +1,4 @@
-module github.com/golang-auth/go-gssapi-c
+module github.com/axent-pl/go-gssapi-c
 
 go 1.24
 
