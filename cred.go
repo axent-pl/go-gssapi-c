@@ -233,7 +233,7 @@ func (c *Credential) Add(name g.GssName, mech g.GssMech, usage g.CredUsage, init
 	}
 }
 
-func (c *Credential) AcquireImpersonateName(name g.GssName, mechs []g.GssMech, usage g.CredUsage, lifetime *g.GssLifetime) (g.Credential, error) {
+func (c *Credential) AcquireImpersonateName(name g.GssName, mechs []g.GssMech, usage g.CredUsage, lifetime g.GssLifetime) (g.Credential, error) {
 	cOidSet, pinner := gssOidSetFromOids(mechsToOids(mechs), nil)
 	defer pinner.Unpin()
 
@@ -253,7 +253,7 @@ func (c *Credential) AcquireImpersonateName(name g.GssName, mechs []g.GssMech, u
 		&minor,
 		c.id,
 		cGssName,
-		gssLifetimeToSeconds(lifetime),
+		gssLifetimeToSeconds(&lifetime),
 		cOidSet,
 		C.int(usage),
 		&cCredID,
