@@ -232,3 +232,47 @@ func (c *Credential) Add(name g.GssName, mech g.GssMech, usage g.CredUsage, init
 		return &Credential{id: cCredOut}, nil
 	}
 }
+
+func (c *Credential) AcquireImpersonateName(name g.GssName, mechs []g.GssMech, usage g.CredUsage, lifetime *g.GssLifetime) (g.Credential, error) {
+	cOidSet, pinner := gssOidSetFromOids(mechsToOids(mechs), nil)
+	defer pinner.Unpin()
+
+	var cGssName C.gss_name_t = C.GSS_C_NO_NAME
+	if name != nil {
+		lName, ok := name.(*GssName)
+		if !ok {
+			return nil, fmt.Errorf("bad name type %T, %w", name, g.ErrBadName)
+		}
+
+		cGssName = lName.name
+	}
+
+	var minor C.OM_uint32
+	var cCredID C.gss_cred_id_t = C.GSS_C_NO_CREDENTIAL
+	major := C.gss_acquire_cred_impersonate_name(
+		&minor,
+		c.id,
+		cGssName,
+		gssLifetimeToSeconds(lifetime),
+		cOidSet,
+		C.int(usage),
+		&cCredID,
+		nil,
+		nil,
+	)
+	if major != 0 {
+		return nil, makeStatus(major, minor)
+	}
+
+	cred := &Credential{
+		id:           cCredID,
+		usage:        usage,
+		isFromNoName: cGssName == C.GSS_C_NO_NAME,
+	}
+
+	return cred, nil
+}
+
+func (c *Credential) AddImpersonateName(impersonateCred Credential, name GssName, mech g.GssMech, usage g.CredUsage, initiatorLifetime g.GssLifetime, acceptorLifetime g.GssLifetime) (g.Credential, error) {
+	return nil, nil
+}
